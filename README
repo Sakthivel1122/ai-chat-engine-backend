@@ -1,0 +1,35 @@
+# To create a django project:
+python3 -m venv venv
+source venv/bin/activate
+pip install pipenv
+pipenv install django
+django-admin startproject server .
+
+# To create an app in django:
+python manage.py startapp app_name
+
+# To install djangorestframework
+pip install djangorestframework
+
+# To make migrations:
+python manage.py makemigrations
+python manage.py migrate
+
+# To create super user:
+python manage.py createsuperuser
+
+# To run django project
+python manage.py runserver
+
+
+# required when using postgreSQLdjango-admin startproject server .
+pip install psycopg2-binary
+
+# To activate virtual environment
+.\venv\Scripts\Activate.ps1
+
+# update requirements.txt after installing new library
+pip freeze > requirements.txt
+
+# for installing libraries from requirements.txt
+pip install -r requirements.txt
