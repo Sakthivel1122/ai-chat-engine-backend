@@ -10,7 +10,6 @@ def load_chat_history(session_id, chat_engine):
 
     history = []
     for msg in messages:
-        print("messages ===>>>",msg.sender, msg.message)
         if msg.sender == "human":
             history.append(HumanMessage(content=msg.message))
         elif msg.sender == "bot":

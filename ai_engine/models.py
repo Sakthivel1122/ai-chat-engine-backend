@@ -1,4 +1,4 @@
-from mongoengine import ReferenceField, StringField, DictField
+from mongoengine import ReferenceField, StringField, DictField, BooleanField
 from server.models import TimeStampedDocument
 from user.models import User
 
@@ -6,6 +6,7 @@ class AIProfile(TimeStampedDocument):
     name = StringField(required=True)  # e.g., Resume Reviewer, Interview Coach
     system_prompt = StringField(required=True)
     config = DictField(default=dict)  # Optional: model type, temperature, max_tokens, etc.
+    is_default = BooleanField(default=False)
 
     meta = {'collection': 'ai_profiles'}
 

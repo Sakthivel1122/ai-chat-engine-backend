@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 from mongoengine import connect
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -137,13 +138,14 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'authentication.authentication.custom_exception_handler',
 }
 
-GROQ_API_KEY = "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"
-# GROQ_API_KEY = "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"
-
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",
 ]
 
 # CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOW_CREDENTIALS = True
+
+# env values
+GROQ_API_KEY = config('GROQ_API_KEY')
+GOOGLE_OAUTH_CLIENT_ID = config('GOOGLE_OAUTH_CLIENT_ID')
