@@ -7,13 +7,18 @@ from .serializers import AIProfileSerializer, ChatSessionSerializer, ChatMessage
 from .models import AIProfile, ChatSession, ChatMessage
 from authentication.permissions import IsAdmin, IsUser, IsUserOrAdmin
 from user.models import User
-from .utils import load_chat_history
+from .utils import load_chat_history, get_chat_session_title_suggestion
 from .ai_chat_engine import ChatEngine
 from mongoengine.errors import DoesNotExist
 from authentication.utils import get_user_from_token
 from bson import ObjectId
 import datetime
 from mongoengine.queryset.visitor import Q
+from queue import Queue, Empty
+from django.http import StreamingHttpResponse
+import time
+import json
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 @api_view(['POST'])
 # @authentication_classes([])  # Disables authentication
@@ -26,6 +31,7 @@ def send_message(request):
     
     chat_session_id = data.get('chat_session_id')
     user_message = data['message']
+    chat_type = data['chat_type']
 
     if chat_session_id:
         try:
@@ -43,11 +49,11 @@ def send_message(request):
             ai_profile = AIProfile.objects.filter(is_default=True, deleted_at=None).first()
 
         user = User.objects.get(id=user_data['id'], deleted_at=None)
-
+        session_title = get_chat_session_title_suggestion(user_message)
         chat_session = ChatSession(
             user=user,
             ai_profile=ai_profile,
-            title=ai_profile.name if 'ai_profile_id' in data else "New Chat"
+            title=session_title
         )
         chat_session.save()
 
@@ -59,16 +65,43 @@ def send_message(request):
     load_chat_history(chat_session.id, chat_engine)
 
     # print(chat_engine.get_history())
-    ai_response = chat_engine.chat(user_message)
 
-    ChatMessage(session=chat_session, sender="human", message=user_message).save()
-    ChatMessage(session=chat_session, sender="bot", message=ai_response).save()
+    if 'chat_type' in data and chat_type == 'stream':
+        q = Queue()
+        ai_response = ""
+        def generate_stream():
+            nonlocal ai_response
+        # Start streaming in a background-thread-like behavior
+            chat_engine.streaming_chat(user_message, q)
+            metadata = {
+                "chat_session_id": str(chat_session.id),
+                "user_message": user_message,
+            }
+            yield "[META]" + json.dumps(metadata) + "\n"
 
-    return response({
-        "chat_session_id": str(chat_session.id),
-        "user_message": user_message,
-        "ai_response": ai_response
-    }, "success", 200)
+            # Yield tokens one-by-one
+            while True:
+                time.sleep(0.05)
+                try:
+                    token = q.get(timeout=10)
+                    if token == "[DONE]":
+                        ChatMessage(session=chat_session, sender="human", message=user_message).save()
+                        ChatMessage(session=chat_session, sender="bot", message=ai_response).save()
+                        break
+                    ai_response += token
+                    yield token
+                except Empty:
+                    break
+        return StreamingHttpResponse(generate_stream(), content_type="text/plain")
+    else:
+        ai_response = chat_engine.chat(user_message)
+        ChatMessage(session=chat_session, sender="human", message=user_message).save()
+        ChatMessage(session=chat_session, sender="bot", message=ai_response).save()
+        return response({
+            "chat_session_id": str(chat_session.id),
+            "user_message": user_message,
+            "ai_response": ai_response
+        }, "success", 200)
 
 @api_view(['GET'])
 @permission_classes([IsUser])
@@ -239,9 +272,10 @@ def create_chat_session(request):
     }
     return response(chat_session_res, "Chat Session Created Successfully", 200)
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsUser])
 def get_chat_session(request, session_id=None):
+    data = request.data.copy()
 
     if session_id:
         try:
@@ -254,13 +288,37 @@ def get_chat_session(request, session_id=None):
         user_data = get_user_from_token(request)
         user_id = user_data['id']
 
+        page_no = data.get('page_no', None)
+        page_size = data.get('page_size', None)
+
+        total_count = None
+        total_pages = None
         try:
             chat_sessions = ChatSession.objects(
                 user=ObjectId(user_id),
                 deleted_at=None
             ).order_by('-created_at')
+            if page_no and page_size:
+                paginator = Paginator(chat_sessions, page_size)
+                chat_sessions = paginator.get_page(page_no)
+                total_count = paginator.count
+                total_pages = paginator.num_pages
+            chat_sessions_list = ChatSessionDocumentSerializer(chat_sessions, many=True)
+            return response({
+                'data': chat_sessions_list.data,
+                'total_count': total_count,
+                'total_pages': total_pages
+            }, "Retrieved Successfully!", 200)
         except Exception as e:
             return response({'error': str(e)}, "Error Retrieving Chat Session!", 400)
 
-        chat_sessions_list = ChatSessionDocumentSerializer(chat_sessions, many=True)
-        return response(chat_sessions_list.data, "Retrieved Successfully!", 200)
+@api_view(['GET'])
+@permission_classes([IsUser])
+def get_session_data(request):
+    session_id = request.query_params.get('session_id')
+    try:
+        chat_session = ChatSession.objects.get(id=session_id, deleted_at=None)
+        chat_session_serializer = ChatSessionDocumentSerializer(chat_session)
+        return response(chat_session_serializer.data, "Retrieved Successfully!", 200)
+    except Exception as e:
+        return response({'error': str(e)}, "Error Retrieving Chat Session Data!", 400)
