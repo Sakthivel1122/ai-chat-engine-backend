@@ -71,8 +71,12 @@ def send_message(request):
         ai_response = ""
         def generate_stream():
             nonlocal ai_response
-        # Start streaming in a background-thread-like behavior
+            # Start streaming in a background-thread-like behavior
             chat_engine.streaming_chat(user_message, q)
+            # full_message
+            # for msg in generator:
+            #     yield msg.content
+
             metadata = {
                 "chat_session_id": str(chat_session.id),
                 "user_message": user_message,
@@ -137,11 +141,15 @@ class AIProfileCRUD(APIView):
     def get(self, request, ai_profile_id=None):
         try:
             if ai_profile_id:
-                profile = AIProfile.objects.get(id=ai_profile_id, deleted_at=None)
+                profile = AIProfile.objects.get(id=ai_profile_id, is_active=True, deleted_at=None)
                 serializer = AIProfileSerializer(profile)
                 return response(serializer.data, "Profile Retrieved", 200)
             else:
-                profiles = AIProfile.objects.filter(Q(is_default__ne=True) | Q(is_default__exists=False), deleted_at=None)
+                user_data = get_user_from_token(request)
+                if user_data['role'] == 'admin':
+                    profiles = AIProfile.objects.filter(Q(is_default__ne=True) | Q(is_default__exists=False), deleted_at=None)
+                else:
+                    profiles = AIProfile.objects.filter(Q(is_default__ne=True) | Q(is_default__exists=False), is_active=True, deleted_at=None)
                 serializer = AIProfileSerializer(profiles, many=True)
                 return response(serializer.data, "Retrieved Successfully!", 200)
         except Exception as e:
@@ -150,23 +158,39 @@ class AIProfileCRUD(APIView):
     def post(self, request):
         try:
             data = request.data.copy()
-            serializer = AIProfileSerializer(data=request.data)
-            if not serializer.is_valid():
-                return response(serializer.errors, "failed", 400)
-            ai_profile = AIProfile(
-                name=data['name'],
-                system_prompt=data['system_prompt'],
-                config=data.get('config', {})
-            )
-            ai_profile.save()
+            if 'id' in data:
+                try:
+                    ai_profile = AIProfile(id=ObjectId(data['id']))
+                    if 'name' in data:
+                        ai_profile.name = data['name']
+                    if 'system_prompt' in data:
+                        ai_profile.system_prompt = data['system_prompt']
+                    if 'is_active' in data:
+                        ai_profile.is_active = data['is_active']
+                    ai_profile.save()
+                    return response(None, "Updated Successfully!", 200)
+                except Exception as e:
+                    return response({"error": str(e)}, "Failed to Update", 400)
+            else:
+                serializer = AIProfileSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return response(serializer.errors, "failed", 400)
+                ai_profile = AIProfile(
+                    name=data['name'],
+                    system_prompt=data['system_prompt'],
+                    is_active=data['is_active'],
+                    config=data.get('config', {})
+                )
+                ai_profile.save()
 
-            ai_profile_res = {
-                "id": str(ai_profile.id),
-                "name": ai_profile.name,
-                "system_prompt": ai_profile.system_prompt,
-                "config": ai_profile.config
-            }
-            return response(ai_profile_res, "Created Successfully!", 200)
+                ai_profile_res = {
+                    "id": str(ai_profile.id),
+                    "name": ai_profile.name,
+                    "system_prompt": ai_profile.system_prompt,
+                    "config": ai_profile.config,
+                    'is_active': ai_profile.is_active,
+                }
+                return response(ai_profile_res, "Created Successfully!", 200)
         except Exception as e:
             return response({"error": str(e)}, "Failed to create", 400)
 

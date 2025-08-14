@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'ai_engine',
     'user',
     'authentication',
+    'admin_services',
 ]
 
 MIDDLEWARE = [

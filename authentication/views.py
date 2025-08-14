@@ -117,6 +117,8 @@ def oauth_google_login(request):
         name = response_data.get("name", "")
         sub = response_data.get("sub")
 
+        # return response(google_response, "success", 400)
+
         user = User.objects(provider="google", provider_id=sub, deleted_at=None).first()
 
         if not user:
@@ -156,7 +158,7 @@ def oauth_google_login(request):
 def create_admin(request):
     data = request.data.copy() 
     # Check if user exists using MongoEngine's query
-    user_exists = User.objects(email=data['email'], role='admin', deleted_at=None).first()
+    user_exists = User.objects(email=data['email'], deleted_at=None).first()
     if user_exists:
         return response(None, "User Already exists!", 400)
 

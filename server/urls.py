@@ -22,4 +22,5 @@ urlpatterns = [
     path('user/', include('user.urls')),
     path('authentication/', include('authentication.urls')),
     path('ai-engine/', include('ai_engine.urls')),
+    path('admin-services/', include('admin_services.urls')),
 ]

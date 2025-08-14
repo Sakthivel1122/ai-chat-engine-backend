@@ -6,6 +6,7 @@ class AIProfileSerializer(serializers.Serializer):
     name = serializers.CharField(required=True)
     system_prompt = serializers.CharField(required=True)
     config = serializers.DictField(required=False)
+    is_active = serializers.BooleanField(required=False)
 
 class ChatSessionSerializer(serializers.Serializer):
     id = serializers.CharField(required=False)

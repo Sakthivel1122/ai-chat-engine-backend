@@ -7,6 +7,7 @@ class AIProfile(TimeStampedDocument):
     system_prompt = StringField(required=True)
     config = DictField(default=dict)  # Optional: model type, temperature, max_tokens, etc.
     is_default = BooleanField(default=False)
+    is_active = BooleanField(default=False)
 
     meta = {'collection': 'ai_profiles'}
 
