@@ -79,9 +79,11 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 connect(
-    db='interview_bot',
+    db='ai_chat_engine_db',
+    username='superadmin',
+    password='securepass123',
     host='mongodb://localhost:27017/ai_chat_engine_db',
-    alias='default'
+    authentication_source='admin'
 )
 
 
@@ -140,8 +142,8 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
+    "http://localhost:3000/",
+    "http://localhost:3001/",
 ]
 
 # CORS_ALLOW_ALL_ORIGINS = True
