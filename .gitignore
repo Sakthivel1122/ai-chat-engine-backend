@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.manifest
+*.spec
+
+# Environment
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.code-workspace
+
+# Django
+*.log
+local_settings.py
+media/
+staticfiles/
+static/
+
+# MongoEngine (no DB file to ignore like SQLite)
+# If you use a local dump for development, you might want to ignore it:
+dump/
+*.bson
+*.metadata.json
+
+# Coverage and testing
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+nosetests.xml
+*.cover
+.pytest_cache/
+
+# Migrations (optional if you're using them)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+# **/migrations/*.py  # Uncomment to ignore migration files
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+*.pid.lock
