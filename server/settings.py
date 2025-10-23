@@ -78,12 +78,17 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# connect(
+#     db=config('MONGODB_NAME'),
+#     username=config('MONGODB_USERNAME'),
+#     password=config('MONGODB_PASSWORD'),
+#     host=config('MONGODB_URL'),
+#     authentication_source=config('MONGODB_AUTHENTICATION_SOURCE')
+# )
+
+
 connect(
-    db=config('MONGODB_NAME'),
-    username=config('MONGODB_USERNAME'),
-    password=config('MONGODB_PASSWORD'),
-    host=config('MONGODB_URL'),
-    authentication_source=config('MONGODB_AUTHENTICATION_SOURCE')
+    host=config('MONGODB_FULL_URL')
 )
 
 
@@ -144,6 +149,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000/",
     "http://localhost:3001/",
+    "https://ai-chat-engine.vercel.app/",
 ]
 
 # CORS_ALLOW_ALL_ORIGINS = True
