@@ -152,6 +152,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://ai-chat-engine.vercel.app/",
 ]
 
+APPEND_SLASH = False
+
 # CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
