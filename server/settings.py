@@ -88,6 +88,7 @@ WSGI_APPLICATION = 'server.wsgi.application'
 
 
 connect(
+    db=config('MONGODB_NAME'),
     host=config('MONGODB_FULL_URL')
 )
 
