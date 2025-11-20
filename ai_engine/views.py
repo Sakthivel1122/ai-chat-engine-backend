@@ -346,3 +346,4 @@ def get_session_data(request):
         return response(chat_session_serializer.data, "Retrieved Successfully!", 200)
     except Exception as e:
         return response({'error': str(e)}, "Error Retrieving Chat Session Data!", 400)
+
