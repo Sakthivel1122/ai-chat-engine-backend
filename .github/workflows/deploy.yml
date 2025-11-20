@@ -15,9 +15,9 @@ jobs:
       - name: Deploy to Server
         uses: appleboy/ssh-action@v0.1.9
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/gcp_instance_user/workspace/backend/ai-chat-engine-backend
             bash deploy.sh
